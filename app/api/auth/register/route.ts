@@ -1,9 +1,10 @@
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { NextRequest, NextResponse } from 'next/server';
-
-export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
@@ -40,16 +41,9 @@ export async function POST(request: NextRequest) {
       { expiresIn: '7d' }
     );
 
-    return NextResponse.json({
-      token,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-      },
-    });
+    return NextResponse.json({ token, user });
   } catch (error) {
-    console.error('Registration error:', error);
+    console.error(error);
 
     return NextResponse.json(
       { error: 'Internal server error' },
