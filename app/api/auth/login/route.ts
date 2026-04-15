@@ -1,43 +1,35 @@
 export const dynamic = "force-dynamic";
-
 export const runtime = "nodejs";
 
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
 import { NextRequest, NextResponse } from 'next/server';
+
 export async function POST(request: NextRequest) {
   try {
-    const { email, password } = await request.json();
+    const { name, email, password } = await request.json();
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
+    });
 
-    if (!user) {
-      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
+    if (existingUser) {
+      return NextResponse.json({ error: "User already exists" }, { status: 400 });
     }
 
-    const isValid = await bcrypt.compare(password, user.password);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    if (!isValid) {
-      return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
-    }
+    const user = await prisma.user.create({
+      data: {
+        name,
+        email,
+        password: hashedPassword
+      }
+    });
 
-    // ✅ ADD HERE
-    const secret = process.env.JWT_SECRET;
-
-    if (!secret) {
-      throw new Error("JWT_SECRET is not defined");
-    }
-
-    const token = jwt.sign(
-      { userId: user.id, name: user.name, email: user.email },
-      secret,
-      { expiresIn: '7d' }
-    );
-
-    return NextResponse.json({ token });
+    return NextResponse.json({ message: "User created", user });
 
   } catch (error) {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
