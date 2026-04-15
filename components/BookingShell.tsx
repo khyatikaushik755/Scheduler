@@ -142,12 +142,12 @@ export default function BookingShell({ slug }: { slug: string }) {
         <form onSubmit={submitBooking} className="space-y-4">
 
           <input
-            placeholder="Your Name"
-            value={inviteeName}
-            onCh={e => setInviteeName(e.target.value)}
-            className="w-full p-3 rounded bg-slate-800"
-            required
-          />
+  placeholder="Your Name"
+  value={inviteeName}
+  onChange={e => setInviteeName(e.target.value)}
+  className="w-full p-3 rounded bg-slate-800"
+  required
+/>
 
           <input
             placeholder="Email"
