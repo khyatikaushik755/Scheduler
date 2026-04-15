@@ -1,17 +1,8 @@
 import nodemailer from 'nodemailer';
 
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
-
 function generateICS(eventName: string, start: Date, end: Date, description: string) {
-  const formatDate = (date: Date) => date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+  const formatDate = (date: Date) =>
+    date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
 
   return `BEGIN:VCALENDAR
 VERSION:2.0
@@ -36,7 +27,24 @@ export async function sendBookingConfirmation(
   startDateTime: Date,
   endDateTime: Date
 ) {
-  const icsContent = generateICS(eventName, startDateTime, endDateTime, `Meeting with ${name}`);
+
+  // 🔥 MOVE INSIDE FUNCTION (IMPORTANT FIX)
+  const transporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false,
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+
+  const icsContent = generateICS(
+    eventName,
+    startDateTime,
+    endDateTime,
+    `Meeting with ${name}`
+  );
 
   const mailOptions = {
     from: process.env.EMAIL_USER,
