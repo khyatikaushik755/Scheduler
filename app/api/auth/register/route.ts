@@ -3,7 +3,8 @@ export const dynamic = 'force-dynamic';
 
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+// import jwt from 'jsonwebtoken';
+import { SignJWT } from 'jose';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
@@ -31,15 +32,16 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    const token = jwt.sign(
-      {
-        userId: user.id,
-        name: user.name,
-        email: user.email,
-      },
-      process.env.JWT_SECRET!,
-      { expiresIn: '7d' }
-    );
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
+
+const token = await new SignJWT({
+  userId: user.id,
+  name: user.name,
+  email: user.email,
+})
+  .setProtectedHeader({ alg: 'HS256' })
+  .setExpirationTime('7d')
+  .sign(secret);
 
     return NextResponse.json({ token, user });
   } catch (error) {
