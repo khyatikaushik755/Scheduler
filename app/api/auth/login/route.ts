@@ -7,7 +7,12 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, password } = await request.json();
+    const body = await request.json();
+    const { name, email, password } = body;
+
+    if (!email || !password || !name) {
+      return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+    }
 
     const existingUser = await prisma.user.findUnique({
       where: { email }
@@ -30,6 +35,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ message: "User created", user });
 
   } catch (error) {
+    console.error("Register error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
