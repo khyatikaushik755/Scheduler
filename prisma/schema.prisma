@@ -1,0 +1,87 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model EventType {
+  id           Int           @id @default(autoincrement())
+  name         String
+  slug         String        @unique
+  duration     Int
+  timezone     String
+  description  String?
+  bufferTime   Int           @default(0) // Buffer time in minutes before/after meetings
+  availabilities Availability[]
+  dateOverrides DateOverride[]
+  customQuestions CustomQuestion[]
+  meetings     Meeting[]
+  createdAt    DateTime      @default(now())
+}
+
+model Availability {
+  id          Int       @id @default(autoincrement())
+  eventType   EventType @relation(fields: [eventTypeId], references: [id])
+  eventTypeId Int
+  weekday     Int
+  startTime   String
+  endTime     String
+}
+
+model DateOverride {
+  id          Int       @id @default(autoincrement())
+  eventType   EventType @relation(fields: [eventTypeId], references: [id])
+  eventTypeId Int
+  date        DateTime  // Specific date for override
+  startTime   String?
+  endTime     String?
+  isAvailable Boolean   @default(true) // false = unavailable all day, true = custom hours
+  createdAt   DateTime  @default(now())
+
+  @@unique([eventTypeId, date])
+}
+
+model CustomQuestion {
+  id          Int       @id @default(autoincrement())
+  eventType   EventType @relation(fields: [eventTypeId], references: [id])
+  eventTypeId Int
+  question    String
+  type        String    @default("text") // text, textarea, select, radio, checkbox
+  required    Boolean   @default(false)
+  options     String?   // JSON string for select/radio/checkbox options
+  order       Int       @default(0)
+  createdAt   DateTime  @default(now())
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String
+  createdAt DateTime @default(now())
+}
+
+model Meeting {
+  id            Int       @id @default(autoincrement())
+  eventType     EventType @relation(fields: [eventTypeId], references: [id])
+  eventTypeId   Int
+  inviteeName   String
+  inviteeEmail  String
+  startDateTime DateTime
+  endDateTime   DateTime
+  status        String    @default("confirmed")
+  questionAnswers QuestionAnswer[]
+  createdAt     DateTime  @default(now())
+}
+
+model QuestionAnswer {
+  id          Int       @id @default(autoincrement())
+  meeting     Meeting   @relation(fields: [meetingId], references: [id])
+  meetingId   Int
+  question    String
+  answer      String
+  createdAt   DateTime  @default(now())
+}
